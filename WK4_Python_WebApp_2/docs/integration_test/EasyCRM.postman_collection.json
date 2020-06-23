@@ -1,0 +1,163 @@
+{
+	"info": {
+		"name": "EasyCRM",
+		"_postman_id": "360b1054-1f8b-4d75-ae7e-3f23184d61a7",
+		"description": "This is to demo how Postman works for integration test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET login HTML",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{host}}/login/",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"login",
+						""
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "POST login user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "fb1ca75e-5402-403b-8c3f-9d2fe2ae6291",
+						"type": "text/javascript",
+						"exec": [
+							"pm.environment.set(\"cookie_session\", pm.cookies.get(\"session\"));",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "test@gmail.com",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "shh",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{host}}/login/",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"login",
+						""
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "POST create organisation",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "JiangRen",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "type",
+							"value": "other",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "address",
+							"value": "Wynyard",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{host}}/organisation/create",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"organisation",
+						"create"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET organisation By Id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "JiangRen",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "type",
+							"value": "other",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "address",
+							"value": "Wynyard",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{host}}/organisation/1",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"organisation",
+						"1"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
