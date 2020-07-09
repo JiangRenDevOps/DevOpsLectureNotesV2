@@ -1,6 +1,6 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "peru/ubuntu-18.04-desktop-amd64"
-  config.vm.box_version = "20200523.01"
+  config.vm.box_version = "20200707.01"
   config.vm.provider "virtualbox" do |v|
     v.memory = 2048
     v.cpus = 2
@@ -99,7 +99,7 @@ Vagrant.configure("2") do |config|
       if [ ! -f git ]; then
         mkdir -p git
         cd git
-        git clone https://github.com/JiangRenDevOps/DevOpsLectureNotes.git
+        git clone https://github.com/JiangRenDevOps/DevOpsLectureNotesV2.git
       fi
       chown -R vagrant:vagrant /home/vagrant
 
