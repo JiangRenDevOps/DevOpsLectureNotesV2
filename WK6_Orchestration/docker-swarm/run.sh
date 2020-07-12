@@ -2,10 +2,10 @@
 set -e
 
 # cleanup first
-#./cleanup.sh
+./cleanup.sh
 
 # init swarm
-#docker swarm init
+docker swarm init
 
 # Get join token:
 SWARM_TOKEN=$(docker swarm join-token -q worker)
@@ -36,6 +36,6 @@ docker service create \
 
 docker node ls
 
-docker stack deploy -c docker-compose.yaml myswarm
+docker stack deploy -c docker-compose.yml myswarm
 
 docker service ls
