@@ -3,7 +3,11 @@ set -e
 
 # Install go
 snap install go --classic
+
+export PATH=/snap/bin:$PATH
+
 echo 'eval $(go env)' >> /home/vagrant/.bashrc
+echo 'export PATH=/snap/bin:$PATH' >> /home/vagrant/.bashrc
 echo 'export PATH=$GOPATH/bin:$PATH' >> /home/vagrant/.bashrc
 
 # Install kind
