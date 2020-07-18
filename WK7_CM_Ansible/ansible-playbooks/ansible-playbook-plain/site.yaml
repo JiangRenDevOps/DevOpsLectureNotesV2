@@ -1,0 +1,43 @@
+---
+- hosts: all
+  become: yes
+  become_user: root
+  user: ubuntu
+  vars:
+    pip_install_packages:
+      - name: docker
+  pre_tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+  roles:
+    - geerlingguy.docker
+    - geerlingguy.pip
+
+- hosts: tag_redis
+  become: yes
+  user: ubuntu
+  tasks:
+    - name: Start redis container
+      docker_container:
+        name: redis
+        image: redis
+        state: started  
+        ports:
+            - "6379:6379"
+
+- hosts: tag_web
+  become: yes
+  user: ubuntu
+  tasks:
+    - name: Start jrcms container
+      docker_container:
+        name: jrcms
+        image: davisliu/jrcms
+        state: started
+        ports:
+            - "80:8080"
+        env:
+            REDIS_HOST: "{{ groups['tag_redis'][0] }}"
+

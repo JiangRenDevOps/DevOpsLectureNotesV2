@@ -1,0 +1,8 @@
+---
+- name: Install Docker
+  include_role:
+    name: geerlingguy.docker
+
+- name: Install pip
+  include_role:
+    name: geerlingguy.pip
