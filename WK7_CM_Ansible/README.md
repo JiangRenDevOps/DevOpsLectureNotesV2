@@ -60,7 +60,7 @@ ssh ubuntu@<ip address from aws ec2>
 - Go to `ansible-nginx` folder and run the command as below
 
 ```
-ansible-playbook -i <ec2 ip address>, nginx_install.yml
+ansible-playbook -i <ec2 ip address>, nginx_install.yaml
 ```
 
 Explanation:
@@ -105,13 +105,13 @@ Playbook Structure:
 - Uninstall: In order to allow us to see the full cycle we would like to check how to uninstall Nginx. This is the playbook we are going to use.
 
 ```
-ansible-playbook -i <ec2 ip address>, nginx_uninstall.yml
+ansible-playbook -i <ec2 ip address>, nginx_uninstall.yaml
 ```
 
 - Config Nginx to display a static html file
 
 ```
-ansible-playbook -i <ec2 ip address>, nginx_update.yml
+ansible-playbook -i <ec2 ip address>, nginx_update.yaml
 ```
 
 Tip: 
@@ -120,7 +120,7 @@ Tip:
 
 It is fine to install on a remote machine, what about more machines?
 
-## Task #5: Create AWS EC2 instances in us-east-1 region using CloudFront
+## Task #5: Create AWS EC2 instances in us-east-1 region using CloudFormation
 
 - Use this [cloudformation template](CFN-EC2.yaml) to create EC2 instances for our handson: https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/template
 
@@ -205,7 +205,7 @@ Note: the display list is no longer IPs.
 
 ## Task #9: Install a docker role from galaxy to your local laptop
 
-Use `ansible-galaxy install -f requirements.yaml`
+Use `ansible-galaxy install -r requirements.yaml`
 
 Alternatively, you can install it directly
 ```
