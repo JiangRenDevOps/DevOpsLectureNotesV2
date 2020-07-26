@@ -6,16 +6,7 @@ This is a brief guideline on setting up CI/CD for our CMS project.
 
 ## Task #1: Run a Jenkins in Kubernetes Cluster
 
-## Task #2: Add a service account to jenkins
-So Jenkins will have permission to create pods dynamically as Jenkins slave.
-```
-kubectl apply -f https://raw.githubusercontent.com/jenkinsci/kubernetes-plugin/master/src/main/kubernetes/service-account.yml
-```
-
-Add "serviceAccountName: jenkins" to Jenkins in workloads.
-![Alt text](images/CI_CD_CMS_01.png?raw=true)
-
-## Task #3: Install Kubernetes plugin and configure Kubernetes in Jenkins
+## Task #2: Install Kubernetes plugin and configure Kubernetes in Jenkins
 ```
 jenkins-1-jenkins-agents-connector:50000
 ```
@@ -40,13 +31,13 @@ You should see test pipeline running in a newly generated pod
 ![Alt text](images/CI_CD_CMS_06.png?raw=true)
 
 
-## Task #4: Configure Credentials for Jenkins pipeline
+## Task #3: Configure Credentials for Jenkins pipeline
 Sample project: https://github.com/JiangRenDevOps/jrcms
 
 
 
 
-## Task #5: Create Elastic Beanstalk environments in AWS
+## Task #4: Create Elastic Beanstalk environments in AWS
 Create beanstock environments in aws:
 
 ![Alt text](images/CI_CD_CMS_03.png?raw=true)
@@ -61,8 +52,8 @@ Create beanstock environments in aws:
 
 You will need to update the `Jenkinsfile` and files under `deployment` folder accordingly.
 
-## Task #6: Setup Github integration
+## Task #5: Setup Github integration
 https://github.com/JiangRenDevOps/DevOpsLectureNotesV2/tree/master/WK8_CI-CD-Jekins/4.Integrate-with-Github-Org
 
-## Task #7: Play around
+## Task #6: Play around
 Make changes and test the auto deployment
