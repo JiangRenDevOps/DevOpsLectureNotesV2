@@ -1,0 +1,578 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: A multi-tier stack instance.
+Parameters:
+  DeploymentType:
+    Description: The deployment type.
+    Type: String
+    AllowedValues:
+      - Development
+      - Production
+    Default: Development
+  VPC:
+    Description: The VPC for the EC2 instances.
+    Type: 'AWS::EC2::VPC::Id'
+  Subnet1:
+    Description: The subnet1 for the EC2 instances.
+    Type: 'AWS::EC2::Subnet::Id'
+  Subnet2:
+    Description: The subnet2 for the EC2 instances.
+    Type: 'AWS::EC2::Subnet::Id'
+  SSHSecurityGroup:
+    Description: The SSH Security Group for the EC2 instances.
+    Type: 'AWS::EC2::SecurityGroup::Id'
+  KeyPair:
+    Description: The key pair name to use to connect to the EC2 instances.
+    Type: String
+Mappings:
+  Globals:
+    Constants:
+      ImageId: ami-09d95fab7fff3776c
+      AssignPublicIP: 'true'
+      WebInstanceSuffix: web
+      AppInstanceSuffix: app
+  DeploymentTypes:
+    Development:
+      InstanceType: t2.small
+      StorageSize: '20'
+#    Setting the production the same config as Dev, because it is for testing only.
+#    In real production, we could use instances with a bigger type ans storage size
+#    Production:
+#      InstanceType: t2.medium
+#      StorageSize: '50'
+    Production:
+      InstanceType: t2.small
+      StorageSize: '20'
+Conditions:
+  CreateMultipleInstances: !Not
+    - !Equals
+      - Development
+      - !Ref DeploymentType
+Resources:
+  LoadBalancer:
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Condition: CreateMultipleInstances
+    Properties:
+      Instances:
+        - !Ref Web1EC2Instance
+        - !Ref Web2EC2Instance
+      Subnets:
+        - !Ref Subnet1
+        - !Ref Subnet2
+      SecurityGroups:
+        - !Ref PublicWebSecurityGroup
+      Listeners:
+        - LoadBalancerPort: 80
+          InstancePort: 80
+          Protocol: HTTP
+      HealthCheck:
+        Target: 'HTTP:80/'
+        HealthyThreshold: '3'
+        UnhealthyThreshold: '5'
+        Interval: '10'
+        Timeout: '3'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fbf8f065-5dc7-4850-bb4f-8c4287a8cb7b
+  Web1EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !FindInMap
+        - Globals
+        - Constants
+        - ImageId
+      InstanceType: !FindInMap
+        - DeploymentTypes
+        - !Ref DeploymentType
+        - InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          SubnetId: !Ref Subnet1
+          AssociatePublicIpAddress: !FindInMap
+            - Globals
+            - Constants
+            - AssignPublicIP
+          GroupSet:
+            - !Ref SSHSecurityGroup
+            - !If
+              - CreateMultipleInstances
+              - !Ref PrivateWebSecurityGroup
+              - !Ref PublicWebSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdm
+          Ebs:
+            VolumeType: gp2
+            VolumeSize: !FindInMap
+              - DeploymentTypes
+              - !Ref DeploymentType
+              - StorageSize
+            DeleteOnTermination: 'true'
+      KeyName: !Ref KeyPair
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - !FindInMap
+                - Globals
+                - Constants
+                - WebInstanceSuffix
+              - '1'
+      UserData: !Base64
+        'Fn::Join':
+          - ''
+          - - |
+              #!/bin/bash
+            - |
+              yum install -y aws-cfn-bootstrap
+            - |+
+
+            - |
+              # Install the software
+            - /opt/aws/bin/cfn-init -v
+            - ' --stack '
+            - !Ref 'AWS::StackName'
+            - ' --resource Web1EC2Instance'
+            - ' --configsets Install'
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+            - |+
+
+            - |
+              # Signal resource creation completion
+            - /opt/aws/bin/cfn-signal -e $?
+            - ' --stack '
+            - !Ref 'AWS::StackName'
+            - ' --resource Web1EC2Instance'
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT5M
+    DependsOn: AppEC2Instance
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 83fb66e0-bfdf-4076-9d59-3f1077f47a2a
+      'AWS::CloudFormation::Init':
+        configSets:
+          Install:
+            - Install
+        Install:
+          packages:
+            yum:
+              httpd: []
+          files:
+            /var/www/html/index.html:
+              content: !Join
+                - ''
+                - - |
+                    <html>
+                  - |2
+                      <head>
+                  - |2
+                        <title>Welcome to a sample multi-tier app!</title>
+                  - |2
+                      </head>
+                  - |2
+                      <body>
+                  - |2
+                        <h1>Welcome to a sample multi-tier app in Web1!</h1>
+                  - |2
+                      </body>
+                  - |
+                    </html>
+              mode: '0600'
+              owner: apache
+              group: apache
+          services:
+            sysvinit:
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+  Web2EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Condition: CreateMultipleInstances
+    Properties:
+      ImageId: !FindInMap
+        - Globals
+        - Constants
+        - ImageId
+      InstanceType: !FindInMap
+        - DeploymentTypes
+        - !Ref DeploymentType
+        - InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          SubnetId: !Ref Subnet2
+          AssociatePublicIpAddress: !FindInMap
+            - Globals
+            - Constants
+            - AssignPublicIP
+          GroupSet:
+            - !Ref SSHSecurityGroup
+            - !Ref PrivateWebSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdm
+          Ebs:
+            VolumeType: gp2
+            VolumeSize: !FindInMap
+              - DeploymentTypes
+              - !Ref DeploymentType
+              - StorageSize
+            DeleteOnTermination: 'true'
+      KeyName: !Ref KeyPair
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - !FindInMap
+                - Globals
+                - Constants
+                - WebInstanceSuffix
+              - '2'
+      UserData: !Base64
+        'Fn::Join':
+          - ''
+          - - |
+              #!/bin/bash
+            - |
+              yum install -y aws-cfn-bootstrap
+            - |+
+
+            - |
+              # Install the software
+            - /opt/aws/bin/cfn-init -v
+            - ' --stack '
+            - !Ref 'AWS::StackName'
+            - ' --resource Web2EC2Instance'
+            - ' --configsets Install'
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+            - |+
+
+            - |
+              # Signal resource creation completion
+            - /opt/aws/bin/cfn-signal -e $?
+            - ' --stack '
+            - !Ref 'AWS::StackName'
+            - ' --resource Web2EC2Instance'
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT5M
+    DependsOn: AppEC2Instance
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 4e1f2401-833d-442d-be04-89fac2d74778
+      'AWS::CloudFormation::Init':
+        configSets:
+          Install:
+            - Install
+        Install:
+          packages:
+            yum:
+              httpd: []
+          files:
+            /var/www/html/index.html:
+              content: !Join
+                - ''
+                - - |
+                    <html>
+                  - |2
+                      <head>
+                  - |2
+                        <title>Welcome to a sample multi-tier app!</title>
+                  - |2
+                      </head>
+                  - |2
+                      <body>
+                  - |2
+                        <h1>Welcome to a sample multi-tier app in Web2!</h1>
+                  - |2
+                      </body>
+                  - |
+                    </html>
+              mode: '0600'
+              owner: apache
+              group: apache
+          services:
+            sysvinit:
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+  AppEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !FindInMap
+        - Globals
+        - Constants
+        - ImageId
+      InstanceType: !FindInMap
+        - DeploymentTypes
+        - !Ref DeploymentType
+        - InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          SubnetId: !Ref Subnet1
+          AssociatePublicIpAddress: !FindInMap
+            - Globals
+            - Constants
+            - AssignPublicIP
+          GroupSet:
+            - !Ref SSHSecurityGroup
+            - !Ref AppSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdm
+          Ebs:
+            VolumeType: gp2
+            VolumeSize: !FindInMap
+              - DeploymentTypes
+              - !Ref DeploymentType
+              - StorageSize
+            DeleteOnTermination: 'true'
+      KeyName: !Ref KeyPair
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - !FindInMap
+                - Globals
+                - Constants
+                - AppInstanceSuffix
+              - '1'
+      UserData: !Base64
+        'Fn::Join':
+          - ''
+          - - |
+              #!/bin/bash
+            - |
+              yum install -y aws-cfn-bootstrap
+            - |+
+
+            - |
+              # Install the software
+            - /opt/aws/bin/cfn-init -v
+            - ' --stack '
+            - !Ref 'AWS::StackName'
+            - ' --resource AppEC2Instance'
+            - ' --configsets Install'
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+            - |+
+
+            - |
+              # Signal resource creation completion
+            - /opt/aws/bin/cfn-signal -e $?
+            - ' --stack '
+            - !Ref 'AWS::StackName'
+            - ' --resource AppEC2Instance'
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT5M
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 4720705c-1add-4c63-abd6-d9fd4626a43d
+      'AWS::CloudFormation::Init':
+        configSets:
+          Install:
+            - Install
+        Install:
+          packages:
+            yum:
+              tomcat: []
+              tomcat-webapps: []
+          services:
+            sysvinit:
+              tomcat:
+                enabled: 'true'
+                ensureRunning: 'true'
+  PublicWebSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - public-web-sg
+      GroupDescription: !Join
+        - ''
+        - - 'Enables public web access for '
+          - !Ref 'AWS::StackName'
+          - .
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - public-web-sg
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: bfef096b-3b53-4799-b880-0df21011e7ed
+  PrivateWebSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - private-web-sg
+      GroupDescription: !Join
+        - ''
+        - - 'Enables private web access for '
+          - !Ref 'AWS::StackName'
+          - .
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          SourceSecurityGroupId: !Ref PublicWebSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - private-web-sg
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: f00bae41-3fe2-41c1-ad14-64680744f71f
+  AppSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - app-sg
+      GroupDescription: !Join
+        - ''
+        - - 'Enables access to '
+          - !Ref 'AWS::StackName'
+          - ' app tier.'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          SourceSecurityGroupId: !If
+            - CreateMultipleInstances
+            - !Ref PrivateWebSecurityGroup
+            - !Ref PublicWebSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Join
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - app-sg
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: adf9b8b7-25c4-4ddb-9401-e5c34da55511
+Outputs:
+  StackURL:
+    Description: The stack web URL.
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !If
+          - CreateMultipleInstances
+          - !GetAtt
+            - LoadBalancer
+            - DNSName
+          - !GetAtt
+            - Web1EC2Instance
+            - PublicIp
+Metadata:
+  'AWS::CloudFormation::Designer':
+    fbf8f065-5dc7-4850-bb4f-8c4287a8cb7b:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 560
+        'y': 50
+      z: 0
+      embeds: []
+      isassociatedwith:
+        - 83fb66e0-bfdf-4076-9d59-3f1077f47a2a
+        - 4e1f2401-833d-442d-be04-89fac2d74778
+        - bfef096b-3b53-4799-b880-0df21011e7ed
+    83fb66e0-bfdf-4076-9d59-3f1077f47a2a:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 470
+        'y': 150
+      z: 0
+      embeds: []
+      dependson:
+        - 4720705c-1add-4c63-abd6-d9fd4626a43d
+    4e1f2401-833d-442d-be04-89fac2d74778:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 650
+        'y': 150
+      z: 0
+      embeds: []
+      dependson:
+        - 4720705c-1add-4c63-abd6-d9fd4626a43d
+    bfef096b-3b53-4799-b880-0df21011e7ed:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 210
+        'y': 100
+      z: 0
+      embeds: []
+    4720705c-1add-4c63-abd6-d9fd4626a43d:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 553
+        'y': 265
+      z: 0
+      embeds: []
+    f00bae41-3fe2-41c1-ad14-64680744f71f:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 660
+        'y': 270
+      z: 1
+      embeds: []
+    adf9b8b7-25c4-4ddb-9401-e5c34da55511:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 540
+        'y': 360
+      z: 1
+      embeds: []
