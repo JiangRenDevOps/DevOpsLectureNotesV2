@@ -32,7 +32,7 @@ Mappings:
       AppInstanceSuffix: app
   DeploymentTypes:
     Development:
-      InstanceType: t2.small
+      InstanceType: t2.micro
       StorageSize: '20'
 #    Setting the production the same config as Dev, because it is for testing only.
 #    In real production, we could use instances with a bigger type ans storage size
@@ -40,7 +40,7 @@ Mappings:
 #      InstanceType: t2.medium
 #      StorageSize: '50'
     Production:
-      InstanceType: t2.small
+      InstanceType: t2.micro
       StorageSize: '20'
 Conditions:
   CreateMultipleInstances: !Not
