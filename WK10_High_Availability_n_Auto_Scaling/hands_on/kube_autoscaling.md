@@ -137,7 +137,7 @@ kubectl get deploy -n vote
 
 Note:
 - `--namespace` can be short as `-n`
-- there is alias there. For example, pod (po), service (svc), replicationcontroller (rc), deployment (deploy), replicaset (rs) , etc.
+- there are short names there. For example, pod (po), service (svc), replicationcontroller (rc), deployment (deploy), replicaset (rs) , etc.
 
 Try to delete a pod and see if it gets deleted:
 
@@ -207,7 +207,8 @@ containers:
       - --kubelet-preferred-address-types=InternalIP
     ## add the config as above  
 ``` 
-![Alt text](../images/edit-yaml-metricserver.png?raw=true)
+
+Or you can directly use `components.yaml` file under the hands_on folder. It already adds the above there.
 
 4 . Apply the resource
 ```

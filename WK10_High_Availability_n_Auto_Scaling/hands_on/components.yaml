@@ -84,10 +84,10 @@ spec:
       containers:
       - name: metrics-server
         image: k8s.gcr.io/metrics-server-amd64:v0.3.6
-#        command:
-#          - /metrics-server
-#          - --kubelet-insecure-tls
-#          - --kubelet-preferred-address-types=InternalIP
+        command:
+          - /metrics-server
+          - --kubelet-insecure-tls
+          - --kubelet-preferred-address-types=InternalIP
         imagePullPolicy: IfNotPresent
         args:
           - --cert-dir=/tmp
