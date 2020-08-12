@@ -18,6 +18,8 @@ Chaos Engineering first became relevant at internet companies that were pioneeri
 ##2010
 The Netflix Eng Tools team created Chaos Monkey. Chaos Monkey was created in response to Netflix’s move from physical infrastructure to cloud infrastructure provided by Amazon Web Services, and the need to be sure that a loss of an Amazon instance wouldn’t affect the Netflix streaming experience.
 
+![Alt text](../images/chaos_money.png?raw=true)
+
 ##2011
 The Simian Army was born. The Simian Army added additional failure injection modes on top of Chaos Monkey that would allow testing of a more complete suite of failure states, and thus build resilience to those as well. “The cloud is all about redundancy and fault-tolerance. Since no single component can guarantee 100% uptime (and even the most expensive hardware eventually fails), we have to design a cloud architecture where individual components can fail without affecting the availability of the entire system” (Netflix, 2011).
 
@@ -36,11 +38,11 @@ These experiments follow three steps:
 
 
 
-You start by forming a hypothesis about how a system should behave when something goes wrong.
+1. You start by forming a hypothesis about how a system should behave when something goes wrong.
 
-Then, you design the smallest possible experiment to test it in your system.
+2. Then, you design the smallest possible experiment to test it in your system.
 
-Finally, you measure the impact of the failure at each step, looking for signs of success or failure. When the experiment is over, you have a better understanding of your system's real-world behavior.
+3. Finally, you measure the impact of the failure at each step, looking for signs of success or failure. When the experiment is over, you have a better understanding of your system's real-world behavior.
 
 #Which companies practice Chaos Engineering?
 Many larger tech companies practice Chaos Engineering to better understand their distributed systems and microservice architectures. The list includes Twilio, Netflix, LinkedIn, Facebook, Google, Microsoft, Amazon, and many others. The list is always growing.
