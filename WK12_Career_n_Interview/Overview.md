@@ -7,10 +7,12 @@
     * Compensation range
     * How to do the job research?
 * Interview Process Overview
-    * Phone Call
     * Resume
+    * Online Test
+    * Phone Screening
     * Coding Interview 
     * Technical Interview
+    * Cultural/Managerial Interview
 
 # Questions and misunderstandings
 ## Career Related
