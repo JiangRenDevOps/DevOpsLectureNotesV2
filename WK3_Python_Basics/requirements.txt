@@ -13,7 +13,7 @@ chardet==3.0.4
 Click==7.0
 click-repl==0.1.6
 colorama==0.4.1
-cryptography==2.8
+cryptography==3.2
 cycler==0.10.0
 datadog==0.27.0
 dateparser==0.6.0
